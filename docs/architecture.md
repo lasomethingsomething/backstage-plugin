@@ -2,15 +2,17 @@
 
 ## Data flow
 
+The adapter only writes. The browser only reads. The store is not a separate actor; it is just the backend plugin's memory.
+
 ```
-Adapter ──POST──▶ backend plugin ──in-memory store──GET──┐
-                                                          ▼
-Browser ──▶ frontend plugin ──GET /api/runtime-conditions/fulfillments
+Adapter ──POST /fulfillments──▶ backend plugin ──▶ in-memory store (append-only)
+                                ▲
+Browser ──▶ frontend plugin ────┘── GET /fulfillments?profileName=...
     │
     └──▶ Kubernetes plugin proxy ──GET /apis/runtimeconditions.io/v1alpha1/runtimeconditionsprofiles
-              │                        (once per configured cluster)
+              │                     (once per configured cluster)
               ▼
-        profiles correlated to the current entity by workload.uri == source-location
+        profiles matched to the current entity (workload.uri == source-location)
               │
               ▼
         one card per cluster; conditions table joined with fulfillments by condition name
